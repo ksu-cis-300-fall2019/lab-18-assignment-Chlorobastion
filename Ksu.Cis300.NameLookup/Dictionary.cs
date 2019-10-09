@@ -1,5 +1,6 @@
 ﻿/* Dictionary.cs
  * Author: Rod Howell
+ * Edited By: Sebastian Neal
  */
 using System;
 using System.Collections.Generic;
@@ -137,6 +138,93 @@ namespace Ksu.Cis300.NameLookup
         {
             CheckKey(k);
             _elements = Add(_elements, k, v);
+        }
+
+        /// <summary>
+        /// Removes the node with the smallest key from the given
+        /// tree
+        /// </summary>
+        /// <param name="t">Tree to have node removed</param>
+        /// <param name="min">Key and Value removed from tree</param>
+        /// <returns>Resulting tree from removing node</returns>
+        private static BinaryTreeNode<KeyValuePair<TKey, TValue>> RemoveMininumKey(BinaryTreeNode<KeyValuePair<TKey, TValue>> t, out KeyValuePair<TKey, TValue> min)
+        {
+            if (t.LeftChild == null)
+            {
+                min = t.Data;
+                return t.RightChild;
+            }
+            else
+            {
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> node = RemoveMininumKey(t.LeftChild, out KeyValuePair<TKey, TValue> minimum);
+                min = minimum;
+                BinaryTreeNode<KeyValuePair<TKey, TValue>> newNode = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(minimum, node, t.RightChild);
+                return newNode;
+            }
+        }
+
+        /// <summary>
+        /// Removes the node with the given key from the given tree
+        /// </summary>
+        /// <param name="key">Key of node to be removed</param>
+        /// <param name="t">Tree to have node removed from</param>
+        /// <param name="removed">Whether or not the key was found</param>
+        /// <returns>Resulting tree from removing node</returns>
+        private static BinaryTreeNode<KeyValuePair<TKey, TValue>> Remove(TKey key, BinaryTreeNode<KeyValuePair<TKey, TValue>> t, out bool removed)
+        {
+            if (t == null)
+            {
+                removed = false;
+                return null;
+            }
+            else
+            {
+                int compare = key.CompareTo(t.Data.Key);
+                if (compare == 0)
+                {
+                    removed = true;
+                    if (t.LeftChild == null)
+                    {
+                        return t.RightChild;
+                    }
+                    else if (t.RightChild == null)
+                    {
+                        return t.LeftChild;
+                    }
+                    else
+                    {
+                        BinaryTreeNode<KeyValuePair<TKey, TValue>> result = RemoveMininumKey(t.RightChild, out KeyValuePair<TKey, TValue> min);
+                        BinaryTreeNode<KeyValuePair<TKey, TValue>> newNode = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(min, t.LeftChild, result);
+                        return newNode;
+                    }
+                }
+                else if (compare < 0)
+                {
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> result = Remove(key, t.LeftChild, out bool removedLeft);
+                    removed = removedLeft;
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> newNode = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(t.Data, result, t.RightChild);
+                    return newNode;
+                }
+                else
+                {
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> result = Remove(key, t.RightChild, out bool removedRight);
+                    removed = removedRight;
+                    BinaryTreeNode<KeyValuePair<TKey, TValue>> newNode = new BinaryTreeNode<KeyValuePair<TKey, TValue>>(t.Data, t.LeftChild, result);
+                    return newNode;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes given key and associated value from dictionary
+        /// </summary>
+        /// <param name="k">Key to be removed</param>
+        /// <returns>Whether or not the key was found</returns>
+        public bool Remove(TKey k)
+        {
+            CheckKey(k);
+            _elements = Remove(k, _elements, out bool removed);
+            return removed;
         }
     }
 }
